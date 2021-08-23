@@ -11,14 +11,16 @@ function make_col_defs(df; filterable=true, editable_cols=String[])
     
 	column_defs = Dict[]
 	for c in names(df)
-		
 		col_dict = Dict{String, Any}("field" => c)
-		col_dict["editable"] = c ∈ editable_cols
+
+		col_is_editable = c ∈ editable_cols
+		col_dict["editable"] = col_is_editable
 		
 		# special types and filters for specific element types
 		if eltype(df[!, c]) <: Number
 			col_dict["type"] = "numericColumn"
 			filterable && (col_dict["filter"] = "agNumberColumnFilter")
+			col_is_editable && (col_dict["valueParser"] = JavaScript("numberParser"))
 		end
 		# ToDo: add type / filter for dates
 
@@ -110,6 +112,11 @@ function _create_table(column_defs:: AbstractVector{<: AbstractDict}, data:: Abs
 <div id="myGrid" style="height: $(height)px;" class="ag-theme-alpine">
 <script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.js"></script>
 <script>
+
+function numberParser(params) {
+	return Number(params.newValue);
+  }
+
 var div = currentScript.parentElement;
 // set default output value
 div.value = null;
@@ -141,6 +148,7 @@ end
 Utility function to create a DataFrame from a `@bind` variable of a `editable_table`.
 """
 create_dataframe(::Nothing) = DataFrame()
+create_dataframe(::Missing) = DataFrame()
 create_dataframe(x:: Dict) = DataFrame(x)
 
 function create_dataframe(x:: AbstractVector)
