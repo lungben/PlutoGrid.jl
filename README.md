@@ -14,6 +14,7 @@ Write in a Pluto cell:
 ## cell
 begin
     using Pkg
+    Pkg.activate(mktempdir())
     Pkg.add(url="https://github.com/lungben/PlutoGrid.jl")
     using PlutoGrid
 end
