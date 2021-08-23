@@ -64,13 +64,14 @@ editable_table(df; kwargs...) = editable_table(DataFrame(df); kwargs...)
 
 _create_table(column_defs:: AbstractVector{<: AbstractDict}, data:: AbstractVector; 
 	sortable=true, filterable=true, resizable=true, pagination=false, height:: Integer=600) = @htl("""
-<html lang="en">
-<head>
-    <script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.js"></script>
+<div id="myGrid" style="height: $(height)px;" class="ag-theme-alpine">
+<script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.js"></script>
 <script>
-const columnDefs = $(column_defs);
+var div = currentScript.parentElement;
+// set default output value
+div.value = "not edited";
 
-// specify the data
+const columnDefs = $(column_defs);
 const rowData = $(data);
 
 // let the grid know which columns and what data to use
@@ -94,27 +95,20 @@ const gridOptions = {
   },
   onCellEditingStopped: function (event) {
     console.log('cellEditingStopped');
+	div.value = "modified";
+	div.dispatchEvent(new CustomEvent("input"));
   }
 };
-
-// setup the grid after the page has finished loading
-document.addEventListener('DOMContentLoaded', () => {
-    const gridDiv = document.querySelector('#myGrid');
-    new agGrid.Grid(gridDiv, gridOptions);
-});
-
+new agGrid.Grid(div, gridOptions);
 </script>
-</head>
-<body>
-    <div id="myGrid" style="height: $(height)px;" class="ag-theme-alpine"></div>
-</body>
-</html>
+</div>
 """)
 
 # precompilation
 let
 	df = DataFrame(x=1:10, y=10:-1:1)
 	readonly_table(df)
+	editable_table(df)
 end
 	
 end
