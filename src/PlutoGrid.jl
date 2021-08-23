@@ -1,6 +1,6 @@
 module PlutoGrid
 
-using HypertextLiteral: @htl
+using HypertextLiteral: @htl, JavaScript
 using Tables
 using DataFrames
 
@@ -62,8 +62,27 @@ end
 editable_table(df, editable_cols; kwargs...) = editable_table(DataFrame(df), editable_cols; kwargs...)
 editable_table(df; kwargs...) = editable_table(DataFrame(df); kwargs...)
 
-_create_table(column_defs:: AbstractVector{<: AbstractDict}, data:: AbstractVector; 
-	sortable=true, filterable=true, resizable=true, pagination=false, height:: Integer=600) = @htl("""
+function _create_table(column_defs:: AbstractVector{<: AbstractDict}, data:: AbstractVector; 
+	sortable=true, filterable=true, resizable=true, pagination=false, height:: Integer=600,
+	return_only_modified:: Bool=false)
+
+	if return_only_modified
+		edit_callback = JavaScript("""
+		function (event) {
+			div.value = event.data; // return only modified row
+			div.dispatchEvent(new CustomEvent("input"));
+		  }
+		""")
+	else
+		edit_callback = JavaScript("""
+		function (event) {
+			div.value = rowData; // return complete table
+			div.dispatchEvent(new CustomEvent("input"));
+		  }
+		""")
+	end
+
+	return @htl("""
 <div id="myGrid" style="height: $(height)px;" class="ag-theme-alpine">
 <script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.js"></script>
 <script>
@@ -84,15 +103,13 @@ const gridOptions = {
 	resizable: $(resizable)
   },
   pagination: $(pagination),
-  onCellEditingStopped: function (event) {
-	div.value = rowData;
-	div.dispatchEvent(new CustomEvent("input"));
-  }
+  onCellValueChanged: $(edit_callback)
 };
 new agGrid.Grid(div, gridOptions);
 </script>
 </div>
 """)
+end
 
 # precompilation
 let
