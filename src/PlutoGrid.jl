@@ -25,7 +25,24 @@ end
 
 prepare_data(df) = [NamedTuple(row) for row in Tables.rows(df)]
 
-function readonly_table(df; sortable=true, filterable=true, pagination=false)
+readonly_table(df; kwargs...) = readonly_table(DataFrame(df); kwargs...)
+
+
+"""
+	readonly_table(df; sortable=true, filterable=true, pagination=false)
+
+Shows a non-editable table in Pluto.
+
+`df`: DataFrame or any Tables.jl compatible data source (the latter is internally converted to a DataFrame)
+
+`sortable`: enables sorting in the table GUI for all columns (enabled by default)
+
+`filterable`: enables filtering in the table GUI for all columns (enabled by default)
+
+`pagination`: enables pagination of the table (disabled by default)
+
+"""
+function readonly_table(df:: DataFrame; sortable:: Bool=true, filterable:: Bool=true, pagination:: Bool=false)
 	column_defs = make_col_defs(df; sortable, filterable)
 	data = prepare_data(df)
     return readonly_table(column_defs, data; pagination)
