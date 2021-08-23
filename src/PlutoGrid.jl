@@ -69,7 +69,7 @@ _create_table(column_defs:: AbstractVector{<: AbstractDict}, data:: AbstractVect
 <script>
 var div = currentScript.parentElement;
 // set default output value
-div.value = "not edited";
+div.value = null;
 
 const columnDefs = $(column_defs);
 const rowData = $(data);
@@ -84,18 +84,8 @@ const gridOptions = {
 	resizable: $(resizable)
   },
   pagination: $(pagination),
-  onRowEditingStarted: function (event) {
-    console.log('never called - not doing row editing');
-  },
-  onRowEditingStopped: function (event) {
-    console.log('never called - not doing row editing');
-  },
-  onCellEditingStarted: function (event) {
-    console.log('cellEditingStarted');
-  },
   onCellEditingStopped: function (event) {
-    console.log('cellEditingStopped');
-	div.value = "modified";
+	div.value = rowData;
 	div.dispatchEvent(new CustomEvent("input"));
   }
 };
