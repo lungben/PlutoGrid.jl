@@ -4,13 +4,16 @@ using HypertextLiteral: @htl
 using Tables
 using DataFrames
 
-export readonly_table
+export readonly_table, editable_table
 
-function make_col_defs(df; filterable=true)
-    column_defs = Dict[]
+function make_col_defs(df; filterable=true, editable_cols=String[])
+	setdiff(editable_cols, names(df)) == [] || error("not all columns defined as editable are in input data")
+    
+	column_defs = Dict[]
 	for c in names(df)
 		
 		col_dict = Dict("field" => c)
+		col_dict["editable"] = string(c ∈ editable_cols)
 		
 		# special types and filters for specific element types
 		if eltype(df[!, c]) <: Number
@@ -25,9 +28,6 @@ function make_col_defs(df; filterable=true)
 end
 
 prepare_data(df) = [NamedTuple(row) for row in Tables.rows(df)]
-
-readonly_table(df; kwargs...) = readonly_table(DataFrame(df); kwargs...)
-
 
 """
 	readonly_table(df; sortable=true, filterable=true, pagination=false)
@@ -45,14 +45,16 @@ Shows a non-editable table in Pluto.
 `height`: vertical size of the table in Pluto in pixel (default: 600)
 
 """
-function readonly_table(df:: DataFrame; sortable:: Bool=true, filterable:: Bool=true, pagination:: Bool=false, height:: Integer=600)
+function readonly_table(df:: DataFrame; filterable:: Bool=true, kwargs...)
 	column_defs = make_col_defs(df; filterable)
 	data = prepare_data(df)
-    return readonly_table(column_defs, data; sortable, filterable, pagination, height)
+    return _create_table(column_defs, data; filterable, kwargs...)
 end
 
-readonly_table(column_defs:: AbstractVector{<: AbstractDict}, data:: AbstractVector; 
-	sortable=true, filterable=true, pagination=false, height:: Integer=600) = @htl("""
+readonly_table(df; kwargs...) = readonly_table(DataFrame(df); kwargs...)
+
+_create_table(column_defs:: AbstractVector{<: AbstractDict}, data:: AbstractVector; 
+	sortable=true, filterable=true, resizable=true, pagination=false, height:: Integer=600) = @htl("""
 <html lang="en">
 <head>
     <script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.js"></script>
@@ -68,7 +70,8 @@ const gridOptions = {
   rowData: rowData,
   defaultColDef: {
     filter: $(sortable),
-    sortable: $(filterable)
+    sortable: $(filterable),
+	resizable: $(resizable)
   },
   pagination: $(pagination)
 };
