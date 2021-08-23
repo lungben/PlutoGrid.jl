@@ -3,8 +3,16 @@ uuid = "a20d0229-560c-4477-9f1c-52a9c9028069"
 authors = ["Benjamin Lungwitz <benj.lung@googlemail.com> and contributors"]
 version = "0.1.0"
 
+[deps]
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+HypertextLiteral = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
+Tables = "bd369af6-aec1-5ad0-b16a-f7cc5008161c"
+
 [compat]
 julia = "1"
+DataFrames = "1"
+HypertextLiteral = "0.9"
+Tables = "1"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
