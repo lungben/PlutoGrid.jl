@@ -14,4 +14,8 @@ using DataFrames
     @test editable_table(df, ["x"]) isa HypertextLiteral.Result
     @test_throws ErrorException editable_table(df, ["zzz"])
 
+    @test create_dataframe(nothing) == DataFrame()
+    @test create_dataframe(Dict(:a => 1, :b => 2)) == DataFrame(a=1, b=2)
+    @test create_dataframe([Dict(:a => 1, :b => 2), Dict(:a => 3, :b => 4)]) == DataFrame(a=[1, 3], b=[2, 4])
+
 end

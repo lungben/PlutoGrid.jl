@@ -4,7 +4,7 @@ using HypertextLiteral: @htl, JavaScript
 using Tables
 using DataFrames
 
-export readonly_table, editable_table
+export readonly_table, editable_table, create_dataframe
 
 function make_col_defs(df; filterable=true, editable_cols=String[])
 	setdiff(editable_cols, names(df)) == [] || error("not all columns defined as editable are in input data")
@@ -40,6 +40,8 @@ Shows a non-editable table in Pluto.
 
 `filterable`: enables filtering in the table GUI for all columns (enabled by default)
 
+`resizable`: allows resizing of column widths in GUI (enabled by default)
+
 `pagination`: enables pagination of the table (disabled by default)
 
 `height`: vertical size of the table in Pluto in pixel (default: 600)
@@ -53,6 +55,28 @@ end
 
 readonly_table(df; kwargs...) = readonly_table(DataFrame(df); kwargs...)
 
+"""
+	@bind edits editable_table(df, [editable_cols]; sortable=true, filterable=true, pagination=false, height=600, return_only_modified=false)
+
+Shows an editable table in Pluto. In case of user edits in the table, 
+
+`df`: DataFrame or any Tables.jl compatible data source (the latter is internally converted to a DataFrame)
+
+`editable_cols`: (optional) Names of columns which are editable. If not given, all columns are editable.
+
+`sortable`: enables sorting in the table GUI for all columns (enabled by default)
+
+`filterable`: enables filtering in the table GUI for all columns (enabled by default)
+
+`resizable`: allows resizing of column widths in GUI (enabled by default)
+
+`pagination`: enables pagination of the table (disabled by default)
+
+`height`: vertical size of the table in Pluto in pixel (default: 600)
+
+`return_only_modified`: if true, only modified rows are returned to the `@bind` variable. Otherwise, the whole modified table is returned (default `false`)
+
+"""
 function editable_table(df:: DataFrame, editable_cols:: AbstractVector{<: AbstractString}=collect(names(df)); filterable:: Bool=true, kwargs...)
 	column_defs = make_col_defs(df; filterable, editable_cols)
 	data = prepare_data(df)
@@ -109,6 +133,22 @@ new agGrid.Grid(div, gridOptions);
 </script>
 </div>
 """)
+end
+
+"""
+	create_dataframe(x)
+
+Utility function to create a DataFrame from a `@bind` variable of a `editable_table`.
+"""
+create_dataframe(::Nothing) = DataFrame()
+create_dataframe(x:: Dict) = DataFrame(x)
+
+function create_dataframe(x:: AbstractVector)
+	df = DataFrame()
+	for row in x
+		push!(df, row; cols=:union)
+	end
+	return df
 end
 
 # precompilation
