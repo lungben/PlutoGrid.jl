@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </head>
 <body>
-    <div id="myGrid" style="height: 200px; width:500px;" class="ag-theme-alpine"></div>
+    <div id="myGrid" class="ag-theme-alpine"></div>
 </body>
 </html>
 """)
