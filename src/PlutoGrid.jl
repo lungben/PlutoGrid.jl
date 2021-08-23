@@ -12,8 +12,8 @@ function make_col_defs(df; filterable=true, editable_cols=String[])
 	column_defs = Dict[]
 	for c in names(df)
 		
-		col_dict = Dict("field" => c)
-		col_dict["editable"] = string(c ∈ editable_cols)
+		col_dict = Dict{String, Any}("field" => c)
+		col_dict["editable"] = c ∈ editable_cols
 		
 		# special types and filters for specific element types
 		if eltype(df[!, c]) <: Number
@@ -53,6 +53,15 @@ end
 
 readonly_table(df; kwargs...) = readonly_table(DataFrame(df); kwargs...)
 
+function editable_table(df:: DataFrame, editable_cols:: AbstractVector{<: AbstractString}=collect(names(df)); filterable:: Bool=true, kwargs...)
+	column_defs = make_col_defs(df; filterable, editable_cols)
+	data = prepare_data(df)
+	return _create_table(column_defs, data; filterable, kwargs...)
+end
+
+editable_table(df, editable_cols; kwargs...) = editable_table(DataFrame(df), editable_cols; kwargs...)
+editable_table(df; kwargs...) = editable_table(DataFrame(df); kwargs...)
+
 _create_table(column_defs:: AbstractVector{<: AbstractDict}, data:: AbstractVector; 
 	sortable=true, filterable=true, resizable=true, pagination=false, height:: Integer=600) = @htl("""
 <html lang="en">
@@ -73,7 +82,19 @@ const gridOptions = {
     sortable: $(filterable),
 	resizable: $(resizable)
   },
-  pagination: $(pagination)
+  pagination: $(pagination),
+  onRowEditingStarted: function (event) {
+    console.log('never called - not doing row editing');
+  },
+  onRowEditingStopped: function (event) {
+    console.log('never called - not doing row editing');
+  },
+  onCellEditingStarted: function (event) {
+    console.log('cellEditingStarted');
+  },
+  onCellEditingStopped: function (event) {
+    console.log('cellEditingStopped');
+  }
 };
 
 // setup the grid after the page has finished loading
