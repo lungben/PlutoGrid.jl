@@ -124,14 +124,36 @@ div.querySelector("button#insert_row").addEventListener("click", (e) => {
 	})
 """)
 
+delete_button = @htl("""
+	<button  
+	id="delete_row"
+	type="button">
+		Delete Row  
+	</button>
+""")
+
+delete_row_callback = JavaScript("""
+div.querySelector("button#delete_row").addEventListener("click", (e) => {
+
+	const selectedRow = gridOptions.api.getFocusedCell()
+	const id = gridOptions.rowData[selectedRow.rowIndex].i
+	
+	gridOptions.rowData.splice(selectedRow.rowIndex, 1)
+	gridOptions.api.setRowData(gridOptions.rowData)
+
+	div.querySelector("button#update_grid").style.background='red';
+	})
+""")
+
 function _create_table(column_defs:: AbstractVector{<: AbstractDict}, data:: AbstractVector; 
 	sortable=true, filterable=true, resizable=true, pagination=false, height:: Integer=600,
-	editable=false, insert=true)
+	editable=false, insert=true, delete=true)
 
 	return @htl("""
 <div id="myGrid" style="height: $(height)px;" class="ag-theme-alpine">
 $(editable ? edit_button : "")
 $((editable && insert) ? insert_button : "")
+$((editable && delete) ? delete_button : "")
 
 <script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.js"></script>
 <script>
@@ -149,6 +171,7 @@ const rowData = $(data);
 
 $(editable ? edit_button_callbacks : JavaScript(""))
 $((editable && insert) ? insert_new_row_callback : JavaScript(""))
+$((editable && insert) ? delete_row_callback : JavaScript(""))
 
 // let the grid know which columns and what data to use
 const gridOptions = {
