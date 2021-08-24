@@ -76,8 +76,6 @@ Shows an editable table in Pluto. In case of user edits in the table,
 
 `height`: vertical size of the table in Pluto in pixel (default: 600)
 
-`return_only_modified`: if true, only modified rows are returned to the `@bind` variable. Otherwise, the whole modified table is returned (default `false`)
-
 """
 function editable_table(df:: DataFrame, editable_cols:: AbstractVector{<: AbstractString}=collect(names(df)); filterable:: Bool=true, return_only_modified:: Bool=false, kwargs...)
 	column_defs = make_col_defs(df; filterable, editable_cols)
@@ -136,7 +134,19 @@ const gridOptions = {
     sortable: $(filterable),
 	resizable: $(resizable)
   },
-  pagination: $(pagination)
+  pagination: $(pagination),
+  onCellValueChanged: function (params) {
+	// source: https://angularquestions.com/2019/08/21/ag-grid-how-to-update-a-specific-cell-style-after-click/
+	const focusedCell =  params.api.getFocusedCell();
+	const rowNode = params.api.getRowNode(focusedCell.rowIndex);
+	const column = focusedCell.column.colDef.field;
+	focusedCell.column.colDef.cellStyle = { 'background-color': 'yellow' };
+	params.api.refreshCells({
+		force: true,
+		columns: [column],
+		rowNodes: [rowNode]
+	});
+	}
 };
 new agGrid.Grid(div, gridOptions);
 
