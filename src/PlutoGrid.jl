@@ -121,21 +121,6 @@ div.querySelector("button#insert_row").addEventListener("click", (e) => {
 	gridOptions.api.setRowData(gridOptions.rowData);
 
 	div.querySelector("button#update_grid").style.background='red';
-
-	// mark whole new row as edited
-	const rowNode = gridOptions.api.getRowNode(gridOptions.rowData.length - 1);
-	const cols = rowNode.columnApi.getAllColumns();
-	cols.forEach(col => {col.colDef.cellStyle = { 'color': 'red', 'background-color': 'yellow' };});
-	gridOptions.api.refreshCells({
-		force: true,
-		rowNodes: [rowNode]
-	});
-
-	/* known issues: 
-		1. after inserting, previously updated cells are black again
-		2. after inserting 2 rows without confirming in between, the whole table is marked yellow
-	*/
-
 	})
 """)
 
