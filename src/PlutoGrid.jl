@@ -86,7 +86,7 @@ end
 editable_table(df, editable_cols; kwargs...) = editable_table(DataFrame(df), editable_cols; kwargs...)
 editable_table(df; kwargs...) = editable_table(DataFrame(df); kwargs...)
 
-edit_buttons = @htl("""
+edit_button = @htl("""
 	<button  
 		id="update_grid"
 		type="button">
@@ -106,13 +106,48 @@ div.querySelector("button#update_grid").addEventListener("click", (e) => {
 	})
 """)
 
+insert_button = @htl("""
+	<button  
+	id="insert_row"
+	type="button">
+		Insert Row  
+	</button>
+""")
+
+insert_new_row_callback = JavaScript("""
+div.querySelector("button#insert_row").addEventListener("click", (e) => {
+	const row = Object.assign({}, rowData[rowData.length - 1]);
+	gridOptions.rowData.push(row);
+	gridOptions.api.setRowData(gridOptions.rowData);
+
+	div.querySelector("button#update_grid").style.background='red';
+
+	// mark whole new row as edited
+	const rowNode = gridOptions.api.getRowNode(gridOptions.rowData.length - 1);
+	const cols = rowNode.columnApi.getAllColumns();
+	cols.forEach(col => {col.colDef.cellStyle = { 'color': 'red', 'background-color': 'yellow' };});
+	gridOptions.api.refreshCells({
+		force: true,
+		rowNodes: [rowNode]
+	});
+
+	/* known issues: 
+		1. after inserting, previously updated cells are black again
+		2. after inserting 2 rows without confirming in between, the whole table is marked yellow
+	*/
+
+	})
+""")
+
 function _create_table(column_defs:: AbstractVector{<: AbstractDict}, data:: AbstractVector; 
 	sortable=true, filterable=true, resizable=true, pagination=false, height:: Integer=600,
-	editable=false)
+	editable=false, insert=true)
 
 	return @htl("""
 <div id="myGrid" style="height: $(height)px;" class="ag-theme-alpine">
-$(editable ? edit_buttons : "")
+$(editable ? edit_button : "")
+$((editable && insert) ? insert_button : "")
+
 <script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.js"></script>
 <script>
 
@@ -124,10 +159,11 @@ var div = currentScript.parentElement;
 // set default output value
 div.value = null;
 
-$(editable ? edit_button_callbacks : JavaScript(""))
-
 const columnDefs = $(column_defs);
 const rowData = $(data);
+
+$(editable ? edit_button_callbacks : JavaScript(""))
+$((editable && insert) ? insert_new_row_callback : JavaScript(""))
 
 // let the grid know which columns and what data to use
 const gridOptions = {
