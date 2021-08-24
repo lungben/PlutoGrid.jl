@@ -135,6 +135,7 @@ const gridOptions = {
 	resizable: $(resizable)
   },
   pagination: $(pagination),
+  undoRedoCellEditing: true,
   onCellValueChanged: function (params) {
 	// source: https://angularquestions.com/2019/08/21/ag-grid-how-to-update-a-specific-cell-style-after-click/
 	const focusedCell =  params.api.getFocusedCell();
