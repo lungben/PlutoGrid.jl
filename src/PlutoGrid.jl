@@ -82,43 +82,47 @@ Shows an editable table in Pluto. In case of user edits in the table,
 function editable_table(df:: DataFrame, editable_cols:: AbstractVector{<: AbstractString}=collect(names(df)); filterable:: Bool=true, return_only_modified:: Bool=false, kwargs...)
 	column_defs = make_col_defs(df; filterable, editable_cols)
 	data = prepare_data(df)
-	on_cell_value_changed_callback = return_only_modified ? return_modified_row_on_update : return_all_on_update
-	return _create_table(column_defs, data; filterable, on_cell_value_changed_callback, kwargs...)
+	return _create_table(column_defs, data; editable=true, filterable, kwargs...)
 end
 
 editable_table(df, editable_cols; kwargs...) = editable_table(DataFrame(df), editable_cols; kwargs...)
 editable_table(df; kwargs...) = editable_table(DataFrame(df); kwargs...)
 
-
-return_modified_row_on_update = JavaScript("""
-		function (event) {
-			div.value = event.data; // return only modified row
-			div.dispatchEvent(new CustomEvent("input"));
-		}
+edit_buttons = @htl("""
+	<button  
+		id="update_grid"
+		type="button">
+			Confirm  
+	</button>
 """)
-return_all_on_update = JavaScript("""
-		function (event) {
-			div.value = rowData; // return complete table
-			div.dispatchEvent(new CustomEvent("input"));
-		}
+
+edit_button_callbacks = JavaScript("""
+div.querySelector("button#update_grid").addEventListener("click", (e) => {
+	div.value = rowData; // return complete table
+	div.dispatchEvent(new CustomEvent("input"));
+	e.preventDefault();
+	});
 """)
 
 function _create_table(column_defs:: AbstractVector{<: AbstractDict}, data:: AbstractVector; 
 	sortable=true, filterable=true, resizable=true, pagination=false, height:: Integer=600,
-	on_cell_value_changed_callback:: JavaScript=return_all_on_update)
+	editable=false)
 
 	return @htl("""
 <div id="myGrid" style="height: $(height)px;" class="ag-theme-alpine">
+$(editable ? edit_buttons : "")
 <script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.js"></script>
 <script>
 
 function numberParser(params) {
 	return Number(params.newValue);
-  }
+};
 
 var div = currentScript.parentElement;
 // set default output value
 div.value = null;
+
+$(editable ? edit_button_callbacks : JavaScript(""))
 
 const columnDefs = $(column_defs);
 const rowData = $(data);
@@ -132,10 +136,10 @@ const gridOptions = {
     sortable: $(filterable),
 	resizable: $(resizable)
   },
-  pagination: $(pagination),
-  onCellValueChanged: $(on_cell_value_changed_callback)
+  pagination: $(pagination)
 };
 new agGrid.Grid(div, gridOptions);
+
 </script>
 </div>
 """)
