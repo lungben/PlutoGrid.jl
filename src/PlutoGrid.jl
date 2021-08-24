@@ -90,14 +90,13 @@ editable_table(df, editable_cols; kwargs...) = editable_table(DataFrame(df), edi
 editable_table(df; kwargs...) = editable_table(DataFrame(df); kwargs...)
 
 
-return_all_on_update = JavaScript("""
+return_modified_row_on_update = JavaScript("""
 		function (event) {
 			div.value = event.data; // return only modified row
 			div.dispatchEvent(new CustomEvent("input"));
 		}
 """)
-
-return_modified_row_on_update = JavaScript("""
+return_all_on_update = JavaScript("""
 		function (event) {
 			div.value = rowData; // return complete table
 			div.dispatchEvent(new CustomEvent("input"));
