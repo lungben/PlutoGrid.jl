@@ -102,6 +102,7 @@ div.querySelector("button#update_grid").addEventListener("click", (e) => {
 	const all_cols = gridOptions.columnApi.getAllColumns();
 	all_cols.forEach(col => {col.colDef.cellStyle = {'background-color': 'white' };});
 	gridOptions.api.refreshCells({force: true});
+	div.querySelector("button#update_grid").style.background='green';
 	})
 """)
 
@@ -150,6 +151,7 @@ const gridOptions = {
 		columns: [column],
 		rowNodes: [rowNode]
 	});
+	div.querySelector("button#update_grid").style.background='red';
 	}
 };
 new agGrid.Grid(div, gridOptions);
