@@ -99,7 +99,10 @@ div.querySelector("button#update_grid").addEventListener("click", (e) => {
 	div.value = rowData; // return complete table
 	div.dispatchEvent(new CustomEvent("input"));
 	e.preventDefault();
-	});
+	const all_cols = gridOptions.columnApi.getAllColumns();
+	all_cols.forEach(col => {col.colDef.cellStyle = {'background-color': 'white' };});
+	gridOptions.api.refreshCells({force: true});
+	})
 """)
 
 function _create_table(column_defs:: AbstractVector{<: AbstractDict}, data:: AbstractVector; 
@@ -141,7 +144,7 @@ const gridOptions = {
 	const focusedCell =  params.api.getFocusedCell();
 	const rowNode = params.api.getRowNode(focusedCell.rowIndex);
 	const column = focusedCell.column.colDef.field;
-	focusedCell.column.colDef.cellStyle = { 'background-color': 'yellow' };
+	focusedCell.column.colDef.cellStyle = { 'color': 'red', 'background-color': 'yellow' };
 	params.api.refreshCells({
 		force: true,
 		columns: [column],
