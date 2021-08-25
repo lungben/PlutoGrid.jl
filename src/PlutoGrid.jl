@@ -150,7 +150,7 @@ div.querySelector("button#delete_row").addEventListener("click", (e) => {
 
 function _create_table(column_defs:: AbstractVector{<: AbstractDict}, data:: AbstractVector; 
 	sortable=true, filterable=true, resizable=true, pagination=false, height:: Integer=600,
-	editable=false, insert=true, delete=true)
+	editable=false, insert=true, delete=true, auto_confirm=false)
 
 	return @htl("""
 <div id="myGrid" style="height: $(height)px;" class="ag-theme-alpine">
@@ -226,6 +226,8 @@ const gridOptions = {
 	},
 };
 new agGrid.Grid(div, gridOptions);
+
+$(auto_confirm ? JavaScript("""div.querySelector("button#update_grid").click();""") : JavaScript(""))
 
 </script>
 </div>
