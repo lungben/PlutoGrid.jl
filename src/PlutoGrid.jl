@@ -116,6 +116,11 @@ div.querySelector("button#insert_row").addEventListener("click", (e) => {
 	const row = Object.assign({}, rowData[rowData.length - 1]);
 	gridOptions.rowData.push(row);
 	gridOptions.api.setRowData(gridOptions.rowData);
+	const data = gridOptions.rowData[gridOptions.rowData.length -1]
+	gridOptions.columnApi.getAllColumns().forEach(col => {
+		data["modifiedRow" + (gridOptions.rowData.length -1) + "andCellKey" + col.colId] = true;
+		});
+
 	gridOptions.api.refreshCells({force: true});
 
 	div.querySelector("button#update_grid").style.background='red';
