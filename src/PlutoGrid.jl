@@ -200,19 +200,24 @@ const gridOptions = {
   pagination: $(pagination),
   undoRedoCellEditing: true,
   onCellValueChanged: (params) => {
-    if (params.oldValue === params.newValue) {
-      return;
-    }
-	console.log(params);
-    const column = params.column.colDef.field;
-    params.data["modifiedRow" + params.rowIndex + "andCellKey" + column] = true;
-    params.api.refreshCells({
-      force: true,
-      columns: [column],
-      rowNodes: [params.node]
-    });
-	div.querySelector("button#update_grid").style.background='red';
-	}
+		if (params.oldValue === params.newValue) {
+		return;
+		}
+		console.log(params);
+		const column = params.column.colDef.field;
+		params.data["modifiedRow" + params.rowIndex + "andCellKey" + column] = true;
+		params.api.refreshCells({
+		force: true,
+		columns: [column],
+		rowNodes: [params.node]
+		});
+		div.querySelector("button#update_grid").style.background='red';
+	},
+	onCellKeyPress: (event) => {
+		if ((event.event.keyCode == 13) && (event.event.shiftKey == true)) {
+			div.querySelector("button#update_grid").click();
+		}
+	},
 };
 new agGrid.Grid(div, gridOptions);
 
