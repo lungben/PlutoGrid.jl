@@ -99,9 +99,6 @@ div.querySelector("button#update_grid").addEventListener("click", (e) => {
 	div.value = rowData; // return complete table
 	div.dispatchEvent(new CustomEvent("input"));
 	e.preventDefault();
-	const all_cols = gridOptions.columnApi.getAllColumns();
-	all_cols.forEach(col => {col.colDef.cellStyle = {'background-color': 'white' };});
-	gridOptions.api.refreshCells({force: true});
 	div.querySelector("button#update_grid").style.background='green';
 	})
 """)
@@ -119,6 +116,7 @@ div.querySelector("button#insert_row").addEventListener("click", (e) => {
 	const row = Object.assign({}, rowData[rowData.length - 1]);
 	gridOptions.rowData.push(row);
 	gridOptions.api.setRowData(gridOptions.rowData);
+	gridOptions.api.refreshCells({force: true});
 
 	div.querySelector("button#update_grid").style.background='red';
 	})
@@ -180,21 +178,34 @@ const gridOptions = {
   defaultColDef: {
     filter: $(sortable),
     sortable: $(filterable),
-	resizable: $(resizable)
+	resizable: $(resizable),
+	cellStyle: params => {
+		// source: https://stackoverflow.com/questions/65273946/ag-grid-highlight-cell-logic-not-working-properly
+      if (
+        params.data["modifiedRow" +
+                     params.node.rowIndex +"andCellKey"+ 
+                     params.column.colDef.field]
+      ) {
+        return { 'color': 'red', 'background-color': 'yellow' };
+      } else {
+        return null;
+      }
+    },
   },
   pagination: $(pagination),
   undoRedoCellEditing: true,
-  onCellValueChanged: function (params) {
-	// source: https://angularquestions.com/2019/08/21/ag-grid-how-to-update-a-specific-cell-style-after-click/
-	const focusedCell =  params.api.getFocusedCell();
-	const rowNode = params.api.getRowNode(focusedCell.rowIndex);
-	const column = focusedCell.column.colDef.field;
-	focusedCell.column.colDef.cellStyle = { 'color': 'red', 'background-color': 'yellow' };
-	params.api.refreshCells({
-		force: true,
-		columns: [column],
-		rowNodes: [rowNode]
-	});
+  onCellValueChanged: (params) => {
+    if (params.oldValue === params.newValue) {
+      return;
+    }
+	console.log(params);
+    const column = params.column.colDef.field;
+    params.data["modifiedRow" + params.rowIndex + "andCellKey" + column] = true;
+    params.api.refreshCells({
+      force: true,
+      columns: [column],
+      rowNodes: [params.node]
+    });
 	div.querySelector("button#update_grid").style.background='red';
 	}
 };
