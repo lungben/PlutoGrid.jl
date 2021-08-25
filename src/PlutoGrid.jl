@@ -203,7 +203,6 @@ const gridOptions = {
 		if (params.oldValue === params.newValue) {
 		return;
 		}
-		console.log(params);
 		const column = params.column.colDef.field;
 		params.data["modifiedRow" + params.rowIndex + "andCellKey" + column] = true;
 		params.api.refreshCells({
