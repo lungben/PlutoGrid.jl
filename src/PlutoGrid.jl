@@ -118,7 +118,7 @@ div.querySelector("button#insert_row").addEventListener("click", (e) => {
 	gridOptions.api.setRowData(gridOptions.rowData);
 	const data = gridOptions.rowData[gridOptions.rowData.length -1]
 	gridOptions.columnApi.getAllColumns().forEach(col => {
-		data["modifiedRow" + (gridOptions.rowData.length -1) + "andCellKey" + col.colId] = true;
+		data["modified_column_" + col.colId] = true;
 		});
 
 	gridOptions.api.refreshCells({force: true});
@@ -187,9 +187,7 @@ const gridOptions = {
 	cellStyle: params => {
 		// source: https://stackoverflow.com/questions/65273946/ag-grid-highlight-cell-logic-not-working-properly
       if (
-        params.data["modifiedRow" +
-                     params.node.rowIndex +"andCellKey"+ 
-                     params.column.colDef.field]
+        params.data["modified_column_"+ params.column.colDef.field]
       ) {
         return { 'color': 'red', 'background-color': 'yellow' };
       } else {
@@ -204,7 +202,7 @@ const gridOptions = {
 		return;
 		}
 		const column = params.column.colDef.field;
-		params.data["modifiedRow" + params.rowIndex + "andCellKey" + column] = true;
+		params.data["modified_column_" + column] = true;
 		params.api.refreshCells({
 		force: true,
 		columns: [column],
