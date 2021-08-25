@@ -172,15 +172,6 @@ div.value = null;
 const columnDefs = $(column_defs);
 const rowData = $(data);
 
-columnDefs.forEach(col => {
-	if (col.editable) {
-		var col_name = col['field'];
-		rowData.forEach(row => {
-			row["modified_column_"+ col_name] = false;
-		});
-	};
-});
-
 $(editable ? edit_button_callbacks : JavaScript(""))
 $((editable && insert) ? insert_new_row_callback : JavaScript(""))
 $((editable && insert) ? delete_row_callback : JavaScript(""))
