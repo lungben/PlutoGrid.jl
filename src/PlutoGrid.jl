@@ -6,7 +6,7 @@ using DataFrames
 
 export readonly_table, editable_table, create_dataframe
 
-function make_col_defs(df; filterable=true, editable_cols=String[])
+function _make_col_defs(df; filterable=true, editable_cols=String[])
 	setdiff(editable_cols, names(df)) == [] || error("not all columns defined as editable are in input data")
     
 	column_defs = Dict[]
@@ -29,7 +29,7 @@ function make_col_defs(df; filterable=true, editable_cols=String[])
     return column_defs
 end
 
-prepare_data(df) = [NamedTuple(row) for row in Tables.rows(df)]
+_prepare_data(df) = [NamedTuple(row) for row in Tables.rows(df)]
 
 """
 	readonly_table(df; sortable=true, filterable=true, pagination=false)
@@ -50,8 +50,8 @@ Shows a non-editable table in Pluto.
 
 """
 function readonly_table(df:: DataFrame; filterable:: Bool=true, kwargs...)
-	column_defs = make_col_defs(df; filterable)
-	data = prepare_data(df)
+	column_defs = _make_col_defs(df; filterable)
+	data = _prepare_data(df)
     return _create_table(column_defs, data; filterable, kwargs...)
 end
 
@@ -78,79 +78,80 @@ Shows an editable table in Pluto. In case of user edits in the table,
 
 """
 function editable_table(df:: DataFrame, editable_cols:: AbstractVector{<: AbstractString}=collect(names(df)); filterable:: Bool=true, return_only_modified:: Bool=false, kwargs...)
-	column_defs = make_col_defs(df; filterable, editable_cols)
-	data = prepare_data(df)
+	column_defs = _make_col_defs(df; filterable, editable_cols)
+	data = _prepare_data(df)
 	return _create_table(column_defs, data; editable=true, filterable, kwargs...)
 end
 
 editable_table(df, editable_cols; kwargs...) = editable_table(DataFrame(df), editable_cols; kwargs...)
 editable_table(df; kwargs...) = editable_table(DataFrame(df); kwargs...)
 
-edit_button = @htl("""
-	<button  
-		id="update_grid"
-		type="button">
-			Confirm  
-	</button>
-""")
-
-edit_button_callbacks = JavaScript("""
-div.querySelector("button#update_grid").addEventListener("click", (e) => {
-	div.value = rowData; // return complete table
-	div.dispatchEvent(new CustomEvent("input"));
-	e.preventDefault();
-	div.querySelector("button#update_grid").style.background='green';
-	})
-""")
-
-insert_button = @htl("""
-	<button  
-	id="insert_row"
-	type="button">
-		Insert Row  
-	</button>
-""")
-
-insert_new_row_callback = JavaScript("""
-div.querySelector("button#insert_row").addEventListener("click", (e) => {
-	const row = Object.assign({}, rowData[rowData.length - 1]);
-	gridOptions.rowData.push(row);
-	gridOptions.api.setRowData(gridOptions.rowData);
-	const data = gridOptions.rowData[gridOptions.rowData.length -1]
-	gridOptions.columnApi.getAllColumns().forEach(col => {
-		data["modified_column_" + col.colId] = true;
-		});
-
-	gridOptions.api.refreshCells({force: true});
-
-	div.querySelector("button#update_grid").style.background='red';
-	})
-""")
-
-delete_button = @htl("""
-	<button  
-	id="delete_row"
-	type="button">
-		Delete Row  
-	</button>
-""")
-
-delete_row_callback = JavaScript("""
-div.querySelector("button#delete_row").addEventListener("click", (e) => {
-
-	const selectedRow = gridOptions.api.getFocusedCell()
-	const id = gridOptions.rowData[selectedRow.rowIndex].i
-	
-	gridOptions.rowData.splice(selectedRow.rowIndex, 1)
-	gridOptions.api.setRowData(gridOptions.rowData)
-
-	div.querySelector("button#update_grid").style.background='red';
-	})
-""")
 
 function _create_table(column_defs:: AbstractVector{<: AbstractDict}, data:: AbstractVector; 
 	sortable=true, filterable=true, resizable=true, pagination=false, height:: Integer=600,
 	editable=false, insert=true, delete=true, auto_confirm=false)
+
+	edit_button = @htl("""
+		<button  
+			id="update_grid"
+			type="button">
+				Confirm  
+		</button>
+	""")
+
+	edit_button_callbacks = JavaScript("""
+	div.querySelector("button#update_grid").addEventListener("click", (e) => {
+		div.value = rowData; // return complete table
+		div.dispatchEvent(new CustomEvent("input"));
+		e.preventDefault();
+		div.querySelector("button#update_grid").style.background='green';
+		})
+	""")
+
+	insert_button = @htl("""
+		<button  
+		id="insert_row"
+		type="button">
+			Insert Row  
+		</button>
+	""")
+
+	insert_new_row_callback = JavaScript("""
+	div.querySelector("button#insert_row").addEventListener("click", (e) => {
+		const row = Object.assign({}, rowData[rowData.length - 1]);
+		gridOptions.rowData.push(row);
+		gridOptions.api.setRowData(gridOptions.rowData);
+		const data = gridOptions.rowData[gridOptions.rowData.length -1]
+		gridOptions.columnApi.getAllColumns().forEach(col => {
+			data["modified_column_" + col.colId] = true;
+			});
+
+		gridOptions.api.refreshCells({force: true});
+
+		div.querySelector("button#update_grid").style.background='red';
+		})
+	""")
+
+	delete_button = @htl("""
+		<button  
+		id="delete_row"
+		type="button">
+			Delete Row  
+		</button>
+	""")
+
+	delete_row_callback = JavaScript("""
+	div.querySelector("button#delete_row").addEventListener("click", (e) => {
+
+		const selectedRow = gridOptions.api.getFocusedCell()
+		const id = gridOptions.rowData[selectedRow.rowIndex].i
+		
+		gridOptions.rowData.splice(selectedRow.rowIndex, 1)
+		gridOptions.api.setRowData(gridOptions.rowData)
+
+		div.querySelector("button#update_grid").style.background='red';
+		})
+	""")
 
 	return @htl("""
 <div id="myGrid" style="height: $(height)px;" class="ag-theme-alpine">
