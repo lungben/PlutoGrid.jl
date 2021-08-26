@@ -6,31 +6,6 @@ using DataFrames
 
 export readonly_table, editable_table, create_dataframe
 
-function _make_col_defs(df; filterable=true, editable_cols=String[])
-	setdiff(editable_cols, names(df)) == [] || error("not all columns defined as editable are in input data")
-    
-	column_defs = Dict[]
-	for c in names(df)
-		col_dict = Dict{String, Any}("field" => c)
-
-		col_is_editable = c ∈ editable_cols
-		col_dict["editable"] = col_is_editable
-		
-		# special types and filters for specific element types
-		if eltype(df[!, c]) <: Number
-			col_dict["type"] = "numericColumn"
-			filterable && (col_dict["filter"] = "agNumberColumnFilter")
-			col_is_editable && (col_dict["valueParser"] = JavaScript("numberParser"))
-		end
-		# ToDo: add type / filter for dates
-
-		push!(column_defs, col_dict)
-	end
-    return column_defs
-end
-
-_prepare_data(df) = [NamedTuple(row) for row in Tables.rows(df)]
-
 """
 	readonly_table(df; sortable=true, filterable=true, pagination=false)
 
@@ -171,13 +146,7 @@ var div = currentScript.parentElement;
 div.value = null;
 
 const columnDefs = $(column_defs);
-const rowData = $(
-	if isdefined(Main, :PlutoRunner) && isdefined(Main.PlutoRunner, :publish_to_js)
-		JavaScript(Main.PlutoRunner.publish_to_js(data))
-	else
-		data
-	end
-	);
+const rowData = $(_transfer_data(data));
 
 $(editable ? edit_button_callbacks : JavaScript(""))
 $((editable && insert) ? insert_new_row_callback : JavaScript(""))
@@ -230,6 +199,38 @@ $(auto_confirm ? JavaScript("""div.querySelector("button#update_grid").click();"
 </script>
 </div>
 """)
+end
+
+function _make_col_defs(df; filterable=true, editable_cols=String[])
+	setdiff(editable_cols, names(df)) == [] || error("not all columns defined as editable are in input data")
+    
+	column_defs = Dict[]
+	for c in names(df)
+		col_dict = Dict{String, Any}("field" => c)
+
+		col_is_editable = c ∈ editable_cols
+		col_dict["editable"] = col_is_editable
+		
+		# special types and filters for specific element types
+		if eltype(df[!, c]) <: Number
+			col_dict["type"] = "numericColumn"
+			filterable && (col_dict["filter"] = "agNumberColumnFilter")
+			col_is_editable && (col_dict["valueParser"] = JavaScript("numberParser"))
+		end
+		# ToDo: add type / filter for dates
+
+		push!(column_defs, col_dict)
+	end
+    return column_defs
+end
+
+_prepare_data(df) = [NamedTuple(row) for row in Tables.rows(df)]
+
+_transfer_data(data) = if isdefined(Main, :PlutoRunner) && isdefined(Main.PlutoRunner, :publish_to_js)
+	# faster data transfer using MsgPack
+	JavaScript(Main.PlutoRunner.publish_to_js(data))
+else
+	data
 end
 
 """
