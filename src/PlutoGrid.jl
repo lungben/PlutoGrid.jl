@@ -171,7 +171,13 @@ var div = currentScript.parentElement;
 div.value = null;
 
 const columnDefs = $(column_defs);
-const rowData = $(data);
+const rowData = $(
+	if isdefined(Main, :PlutoRunner) && isdefined(Main.PlutoRunner, :publish_to_js)
+		JavaScript(Main.PlutoRunner.publish_to_js(data))
+	else
+		data
+	end
+	);
 
 $(editable ? edit_button_callbacks : JavaScript(""))
 $((editable && insert) ? insert_new_row_callback : JavaScript(""))
