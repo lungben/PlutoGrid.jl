@@ -6,6 +6,9 @@ using DataFrames
 
 export readonly_table, editable_table, create_dataframe
 
+const MODIFIED_COL_INDICATOR = "modified_column_"
+const MODIFIED_COL_REGEX = r"^(?!modified_column_).+"
+
 """
 	readonly_table(df; sortable=true, filterable=true, pagination=false)
 
@@ -98,7 +101,7 @@ function _create_table(column_defs:: AbstractVector{<: AbstractDict}, data:: Abs
 		gridOptions.api.setRowData(gridOptions.rowData);
 		const data = gridOptions.rowData[gridOptions.rowData.length -1]
 		gridOptions.columnApi.getAllColumns().forEach(col => {
-			data["modified_column_" + col.colId] = true;
+			data[$(MODIFIED_COL_INDICATOR) + col.colId] = true;
 			});
 
 		gridOptions.api.refreshCells({force: true});
@@ -163,7 +166,7 @@ const gridOptions = {
 	cellStyle: params => {
 		// source: https://stackoverflow.com/questions/65273946/ag-grid-highlight-cell-logic-not-working-properly
       if (
-        params.data["modified_column_"+ params.column.colDef.field]
+        params.data[$(MODIFIED_COL_INDICATOR)+ params.column.colDef.field]
       ) {
         return { 'color': 'red', 'background-color': 'yellow' };
       } else {
@@ -178,7 +181,7 @@ const gridOptions = {
 		return;
 		}
 		const column = params.column.colDef.field;
-		params.data["modified_column_" + column] = true;
+		params.data[$(MODIFIED_COL_INDICATOR) + column] = true;
 		params.api.refreshCells({
 		force: true,
 		columns: [column],
@@ -238,16 +241,21 @@ end
 
 Utility function to create a DataFrame from a `@bind` variable of a `editable_table`.
 """
-create_dataframe(::Nothing) = DataFrame()
-create_dataframe(::Missing) = DataFrame()
-create_dataframe(x:: Dict) = DataFrame(x)
+create_dataframe(::Nothing; kwargs...) = DataFrame()
+create_dataframe(::Missing; kwargs...) = DataFrame()
 
-function create_dataframe(x:: AbstractVector)
+function create_dataframe(x:: Dict; drop_modified_indicator=true) 
+	df = DataFrame(x)
+	drop_modified_indicator ? df[:, MODIFIED_COL_REGEX] : df
+end
+
+
+function create_dataframe(x:: AbstractVector; drop_modified_indicator=true)
 	df = DataFrame()
 	for row in x
 		push!(df, row; cols=:union)
 	end
-	return df
+	drop_modified_indicator ? df[:, MODIFIED_COL_REGEX] : df
 end
 
 # precompilation
