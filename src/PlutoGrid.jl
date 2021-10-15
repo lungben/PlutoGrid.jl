@@ -132,6 +132,7 @@ function _create_table(column_defs:: AbstractVector{<: AbstractDict}, data:: Abs
 	""")
 
 	checkbox_renderer = JavaScript("""
+	// source: https://stackoverflow.com/a/62173238/14693778
 	function CheckboxRenderer() {}
 
 		CheckboxRenderer.prototype.init = function(params) {
