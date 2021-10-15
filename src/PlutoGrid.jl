@@ -131,6 +131,36 @@ function _create_table(column_defs:: AbstractVector{<: AbstractDict}, data:: Abs
 		})
 	""")
 
+	checkbox_renderer = JavaScript("""
+	// source: https://stackoverflow.com/a/62173238/14693778
+	function CheckboxRenderer() {}
+
+		CheckboxRenderer.prototype.init = function(params) {
+		  this.params = params;
+		
+		  this.eGui = document.createElement('input');
+		  this.eGui.type = 'checkbox';
+		  this.eGui.checked = params.value;
+		
+		  this.checkedHandler = this.checkedHandler.bind(this);
+		  this.eGui.addEventListener('click', this.checkedHandler);
+		}
+		
+		CheckboxRenderer.prototype.checkedHandler = function(e) {
+		  let checked = e.target.checked;
+		  let colId = this.params.column.colId;
+		  this.params.node.setDataValue(colId, checked);
+		}
+		
+		CheckboxRenderer.prototype.getGui = function(params) {
+		  return this.eGui;
+		}
+		
+		CheckboxRenderer.prototype.destroy = function(params) {
+		  this.eGui.removeEventListener('click', this.checkedHandler);
+		}
+	""")
+
 	return @htl("""
 <div id="myGrid" style="height: $(height)px;" class="ag-theme-alpine">
 $(editable ? edit_button : "")
@@ -151,6 +181,8 @@ div.value = null;
 const columnDefs = $(column_defs);
 const rowData = $(_transfer_data(data));
 
+$checkbox_renderer
+
 $(editable ? edit_button_callbacks : JavaScript(""))
 $((editable && insert) ? insert_new_row_callback : JavaScript(""))
 $((editable && insert) ? delete_row_callback : JavaScript(""))
@@ -159,6 +191,7 @@ $((editable && insert) ? delete_row_callback : JavaScript(""))
 const gridOptions = {
   columnDefs: columnDefs,
   rowData: rowData,
+  components: { checkboxRenderer: CheckboxRenderer },
   defaultColDef: {
     filter: $(sortable),
     sortable: $(filterable),
@@ -215,7 +248,10 @@ function _make_col_defs(df; filterable=true, editable_cols=String[])
 		col_dict["editable"] = col_is_editable
 		
 		# special types and filters for specific element types
-		if eltype(df[!, c]) <: Number
+		if eltype(df[!, c]) <: Bool
+			col_dict["cellRenderer"] = JavaScript("""'checkboxRenderer'""")
+
+		elseif eltype(df[!, c]) <: Number
 			col_dict["type"] = "numericColumn"
 			filterable && (col_dict["filter"] = "agNumberColumnFilter")
 			col_is_editable && (col_dict["valueParser"] = JavaScript("numberParser"))
