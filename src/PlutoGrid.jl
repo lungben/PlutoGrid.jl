@@ -185,7 +185,7 @@ $checkbox_renderer
 
 $(editable ? edit_button_callbacks : JavaScript(""))
 $((editable && insert) ? insert_new_row_callback : JavaScript(""))
-$((editable && insert) ? delete_row_callback : JavaScript(""))
+$((editable && delete) ? delete_row_callback : JavaScript(""))
 
 // let the grid know which columns and what data to use
 const gridOptions = {
