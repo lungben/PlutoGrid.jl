@@ -1,7 +1,7 @@
 name = "PlutoGrid"
 uuid = "a20d0229-560c-4477-9f1c-52a9c9028069"
 authors = ["Benjamin Lungwitz <benj.lung@googlemail.com> and contributors"]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
