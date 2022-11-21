@@ -9,6 +9,8 @@ export readonly_table, editable_table, create_dataframe
 const MODIFIED_COL_INDICATOR = "modified_column_"
 const MODIFIED_COL_REGEX = r"^(?!modified_column_).+"
 
+const AG_GRID_VERSION = "28.2.1"
+
 """
 	readonly_table(df; sortable=true, filterable=true, pagination=false)
 
@@ -167,7 +169,7 @@ $(editable ? edit_button : "")
 $((editable && insert) ? insert_button : "")
 $((editable && delete) ? delete_button : "")
 
-<script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.js"></script>
+<script src="https://unpkg.com/ag-grid-community@$(AG_GRID_VERSION)/dist/ag-grid-community.min.js"></script>
 <script>
 
 function numberParser(params) {
